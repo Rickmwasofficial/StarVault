@@ -49,7 +49,7 @@ import dev.chrisbanes.snapper.ExperimentalSnapperApi
 import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxSize(),
     ) {
@@ -61,8 +61,8 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             HomeCategories()
             LazyColumn {
                 item {
-                    HomeTopFeed()
-                    HomeContent()
+                    HomeTopFeed(navigateToDetail)
+                    HomeContent(navigateToDetail)
                 }
             }
         }
@@ -120,7 +120,7 @@ fun HomeCategories(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FeedCard(modifier: Modifier = Modifier) {
+fun FeedCard(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.width(340.dp).height(200.dp).padding(end = 10.dp).shadow(
             elevation = 3.dp,
@@ -129,12 +129,14 @@ fun FeedCard(modifier: Modifier = Modifier) {
             spotColor = MaterialTheme.colorScheme.primaryContainer,
             clip = true
         ),
+        onClick = { navigateToDetail() }
     ) {
         Box(modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(R.drawable.bg),
                 contentDescription = null,
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                alpha = 0.8f
             )
             Column(
                 modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(15.dp),
@@ -159,7 +161,7 @@ fun FeedCard(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalSnapperApi::class)
 @Composable
-fun HomeTopFeed(modifier: Modifier = Modifier) {
+fun HomeTopFeed(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val snapperFlingBehavior = rememberSnapperFlingBehavior(lazyListState = listState)
     LazyRow(
@@ -171,21 +173,21 @@ fun HomeTopFeed(modifier: Modifier = Modifier) {
     ) {
         repeat(8) {
             item {
-                FeedCard()
+                FeedCard(navigateToDetail)
             }
         }
     }
 }
 
 @Composable
-fun ContentHeader(modifier: Modifier = Modifier) {
+fun ContentHeader(title: String, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().padding(start = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            "Popular Images",
+            title,
             fontFamily = poppins,
             style = MaterialTheme.typography.titleMedium
         )
@@ -205,43 +207,70 @@ fun ContentHeader(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HomeContent(modifier: Modifier = Modifier) {
+fun ContentCards(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.width(180.dp).height(180.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
+            MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
+        onClick = { navigateToDetail() }
+    ) {
+        Box(modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(R.drawable.bg),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alpha = 0.8f
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text(
+                    text = "Planets of the solar system",
+                    fontFamily = poppins,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeContent(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth().padding(15.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        ContentHeader()
+        ContentHeader("Latest")
+        LazyRow {
+            repeat(12) {
+                item {
+                    ContentCards(navigateToDetail)
+                }
+            }
+        }
+        ContentHeader("Album 1")
         LazyVerticalGrid(
             columns = GridCells.Adaptive(160.dp),
-            modifier = Modifier.fillMaxWidth().height(600.dp),
+            modifier = Modifier.fillMaxWidth().height(550.dp),
             content = {
-                repeat(14) {
+                repeat(6) {
                     item {
-                        Card(
-                            modifier = modifier.width(180.dp).height(180.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
-                                MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
-                        ) {
-                            Box(modifier.fillMaxSize()) {
-                                Image(
-                                    painter = painterResource(R.drawable.bg),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop
-                                )
-                                Column(
-                                    modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(5.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(7.dp)
-                                ) {
-                                    Text(
-                                        text = "Planets of the solar system",
-                                        fontFamily = poppins,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
+                        ContentCards(navigateToDetail)
+                    }
+                }
+            }
+        )
+        ContentHeader("Album 2")
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(160.dp),
+            modifier = Modifier.fillMaxWidth().height(550.dp),
+            content = {
+                repeat(6) {
+                    item {
+                        ContentCards(navigateToDetail)
                     }
                 }
             }

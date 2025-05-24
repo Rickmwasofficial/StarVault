@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.starvault.ui.components.IconText
 import com.example.starvault.ui.screens.BookMarkScreen
+import com.example.starvault.ui.screens.DetailScreen
 import com.example.starvault.ui.screens.HomeScreen
 import com.example.starvault.ui.screens.SearchScreen
 import com.example.starvault.ui.theme.StarVaultTheme
@@ -39,6 +40,8 @@ object Home
 object Search
 @Serializable
 object Bookmark
+@Serializable
+object Detail
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,13 +87,18 @@ fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifi
         modifier = modifier
     ) {
         composable<Home> {
-            HomeScreen()
+            HomeScreen(
+                navigateToDetail = { navHostController.navigate(Detail) }
+            )
         }
         composable<Search> {
             SearchScreen()
         }
         composable<Bookmark> {
             BookMarkScreen()
+        }
+        composable<Detail> {
+            DetailScreen()
         }
     }
 
