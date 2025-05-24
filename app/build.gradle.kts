@@ -60,5 +60,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
+    implementation(libs.okhttp)
+    implementation(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
 }

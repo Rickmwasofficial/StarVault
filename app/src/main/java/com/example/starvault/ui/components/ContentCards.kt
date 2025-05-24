@@ -18,26 +18,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.starvault.R
 import com.example.starvault.ui.theme.poppins
 
 @Composable
-fun ContentCards(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCards(imgLink: String, title: String, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.width(180.dp).height(180.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
             MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
         onClick = { navigateToDetail() }
     ) {
         Box(modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.bg),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imgLink)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.8f
+                alpha = 0.8f,
+                fallback = painterResource(R.drawable.bg),
+                modifier = Modifier.fillMaxSize()
             )
             Column(
                 modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(5.dp),
@@ -45,7 +53,7 @@ fun ContentCards(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
-                    text = "Planets of the solar system",
+                    text = title,
                     fontFamily = poppins,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,

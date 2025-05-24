@@ -1,5 +1,7 @@
 package com.example.starvault.ui.screens
 
+import Data
+import ItemsData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -31,11 +33,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.fontResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,14 +47,24 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.starvault.R
+import com.example.starvault.ui.components.ErrorScreen
+import com.example.starvault.ui.components.LoadingScreen
 import com.example.starvault.ui.theme.orbitron
 import com.example.starvault.ui.theme.poppins
 import dev.chrisbanes.snapper.ExperimentalSnapperApi
 import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
 
 @Composable
-fun HomeScreen(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(
+   navigateToDetail: () -> Unit,
+   modifier: Modifier = Modifier,
+   homeViewModel: HomeViewModel = viewModel()
+) {
+    val homeUIState: HomeUIState = homeViewModel.homeUIState
     Surface(
         modifier = modifier.fillMaxSize(),
     ) {
@@ -59,13 +73,20 @@ fun HomeScreen(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             HomeNavBar()
-            HomeCategories()
-            LazyColumn {
-                item {
-                    HomeTopFeed(navigateToDetail)
-                    HomeContent(navigateToDetail)
+            when(homeUIState) {
+                is HomeUIState.Success -> {
+                    HomeCategories()
+                    LazyColumn {
+                        item {
+                            HomeTopFeed(homeUIState.data, navigateToDetail)
+                            HomeContent(homeUIState.listData, navigateToDetail)
+                        }
+                    }
                 }
+                is HomeUIState.Error -> ErrorScreen("Failed to Fetch Images")
+                is HomeUIState.Loading -> LoadingScreen("Fetching Data")
             }
+
         }
     }
 }
@@ -121,7 +142,7 @@ fun HomeCategories(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FeedCard(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun FeedCard(title: String, description: String, imgLink: String,navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.width(340.dp).height(200.dp).padding(end = 10.dp).shadow(
             elevation = 3.dp,
@@ -133,11 +154,15 @@ fun FeedCard(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
         onClick = { navigateToDetail() }
     ) {
         Box(modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.bg),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imgLink)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.8f
+                alpha = 0.8f,
+                modifier = Modifier.fillMaxSize()
             )
             Column(
                 modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(15.dp),
@@ -145,15 +170,16 @@ fun FeedCard(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
-                    text = "Planets of the solar system",
+                    text = title,
                     fontFamily = poppins,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Lorem Ipsum dolor sit amet, consetetur sadipscing elitr, sed edium nonumy eirmod tempor invidunt",
+                    text = description,
                     fontFamily = poppins,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 3
                 )
             }
         }
@@ -162,7 +188,7 @@ fun FeedCard(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalSnapperApi::class)
 @Composable
-fun HomeTopFeed(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeTopFeed(data: List<ItemsData>, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val snapperFlingBehavior = rememberSnapperFlingBehavior(lazyListState = listState)
     LazyRow(
@@ -172,10 +198,8 @@ fun HomeTopFeed(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(7.5.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
-        repeat(8) {
-            item {
-                FeedCard(navigateToDetail)
-            }
+        items(data.size) { num ->
+            FeedCard(data[num].data[0].title.toString(), data[num].data[0].description.toString(), data[num].links?.get(0)?.href.toString(), navigateToDetail)
         }
     }
 }
@@ -208,17 +232,15 @@ fun ContentHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HomeContent(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeContent(data: List<ItemsData>, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth().padding(15.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         ContentHeader("Latest")
         LazyRow {
-            repeat(12) {
-                item {
-                    ContentCards(navigateToDetail)
-                }
+            items(data.size) { num ->
+                ContentCards(data[num].links?.get(0)?.href.toString(), data[num].data[0].title.toString(), navigateToDetail)
             }
         }
         ContentHeader("Album 1")
@@ -228,7 +250,7 @@ fun HomeContent(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
             content = {
                 repeat(6) {
                     item {
-                        ContentCards(navigateToDetail)
+                        ContentCards("", "", navigateToDetail)
                     }
                 }
             }
@@ -240,7 +262,7 @@ fun HomeContent(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
             content = {
                 repeat(6) {
                     item {
-                        ContentCards(navigateToDetail)
+                        ContentCards("", "", navigateToDetail)
                     }
                 }
             }

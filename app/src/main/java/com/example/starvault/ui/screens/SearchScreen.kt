@@ -41,7 +41,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
             ) {
                 repeat(12) {
                     item {
-                        ContentCards({  })
+                        ContentCards("", "", {  })
                     }
                 }
             }
@@ -52,7 +52,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
                 content = {
                     repeat(16) {
                         item {
-                            ContentCards({  })
+                            ContentCards("", "", {  })
                         }
                     }
                 }
