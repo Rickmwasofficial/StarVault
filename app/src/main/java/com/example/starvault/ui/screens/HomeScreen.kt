@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.IntrinsicSize
+import com.example.starvault.ui.components.ContentCards
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -202,37 +203,6 @@ fun ContentHeader(title: String, modifier: Modifier = Modifier) {
                 fontFamily = poppins,
                 style = MaterialTheme.typography.titleSmall
             )
-        }
-    }
-}
-
-@Composable
-fun ContentCards(navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.width(180.dp).height(180.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
-            MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
-        onClick = { navigateToDetail() }
-    ) {
-        Box(modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.bg),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                alpha = 0.8f
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart).padding(5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                Text(
-                    text = "Planets of the solar system",
-                    fontFamily = poppins,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 }
