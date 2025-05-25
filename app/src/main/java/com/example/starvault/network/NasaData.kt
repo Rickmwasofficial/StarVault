@@ -49,7 +49,7 @@ data class Data(
     val mediaType: String? = null,
 
     @SerialName("nasa_id")
-    val nasaId: String? = null,
+    val nasaId: String,
 
     val photographer: String? = null,
 

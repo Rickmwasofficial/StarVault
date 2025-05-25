@@ -14,16 +14,27 @@ class HomeViewModel(): ViewModel() {
         private set
 
     init {
-        getData()
+        getData(false)
     }
 
-    private fun getData() {
+    private fun getData(isRefreshing: Boolean) {
         viewModelScope.launch {
+            if (isRefreshing) {
+                val currentState = homeUIState
+                if (currentState is HomeUIState.Success) {
+                    homeUIState = currentState.copy(isRefreshing = true)
+                }
+            }
             homeUIState = try {
                 val repository = NasaRepositoryImpl()
                 val listResult = repository.getData()
                 val feedResult = repository.getFeed()
-                HomeUIState.Success(feedResult, listResult)
+                val category1 = repository.getCategory()
+                var category2 = repository.getCategory()
+                if (category1 == category2) {
+                    category2 = repository.getCategory()
+                }
+                HomeUIState.Success(feedResult, listResult, category1, category2, false)
             } catch(e: IOException) {
                 HomeUIState.Error
             }
@@ -31,6 +42,25 @@ class HomeViewModel(): ViewModel() {
     }
 
     fun refresh() {
-        getData()
+        getData(true)
+    }
+
+    fun shuffleListData() {
+        val currentState = homeUIState
+        if (currentState is HomeUIState.Success) {
+            homeUIState = currentState.copy(listData = currentState.listData.shuffled())
+        }
+    }
+    fun shuffleCat1Data() {
+        val currentState = homeUIState
+        if (currentState is HomeUIState.Success) {
+            homeUIState = currentState.copy(category1 = currentState.category1.shuffled())
+        }
+    }
+    fun shuffleCat2Data() {
+        val currentState = homeUIState
+        if (currentState is HomeUIState.Success) {
+            homeUIState = currentState.copy(category2 = currentState.category2.shuffled())
+        }
     }
 }

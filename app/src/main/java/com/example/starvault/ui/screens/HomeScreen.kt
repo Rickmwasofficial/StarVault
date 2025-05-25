@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import com.example.starvault.ui.components.ContentCards
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -28,10 +31,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -58,11 +63,12 @@ import com.example.starvault.ui.theme.poppins
 import dev.chrisbanes.snapper.ExperimentalSnapperApi
 import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-   navigateToDetail: () -> Unit,
+   navigateToDetail: (String) -> Unit,
+   homeViewModel: HomeViewModel,
    modifier: Modifier = Modifier,
-   homeViewModel: HomeViewModel = viewModel()
 ) {
     val homeUIState: HomeUIState = homeViewModel.homeUIState
     Surface(
@@ -75,11 +81,19 @@ fun HomeScreen(
             HomeNavBar()
             when(homeUIState) {
                 is HomeUIState.Success -> {
-                    HomeCategories()
-                    LazyColumn {
-                        item {
-                            HomeTopFeed(homeUIState.data, navigateToDetail)
-                            HomeContent(homeUIState.listData, navigateToDetail)
+//                    HomeCategories()
+                    PullToRefreshBox(
+                        isRefreshing = homeUIState.isRefreshing,
+                        onRefresh = { homeViewModel.refresh() },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.padding(top = 10.dp)
+                        ) {
+                            item {
+                                HomeTopFeed(homeUIState.data, navigateToDetail)
+                                HomeContent(homeUIState.listData, homeUIState.category1, homeUIState.category2, homeViewModel, navigateToDetail)
+                            }
                         }
                     }
                 }
@@ -142,7 +156,7 @@ fun HomeCategories(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FeedCard(title: String, description: String, imgLink: String,navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun FeedCard(id: String, title: String, description: String, imgLink: String, navigateToDetail: (String) -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.width(340.dp).height(200.dp).padding(end = 10.dp).shadow(
             elevation = 3.dp,
@@ -151,7 +165,10 @@ fun FeedCard(title: String, description: String, imgLink: String,navigateToDetai
             spotColor = MaterialTheme.colorScheme.primaryContainer,
             clip = true
         ),
-        onClick = { navigateToDetail() }
+        onClick = { navigateToDetail(id) },
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Black
+        )
     ) {
         Box(modifier.fillMaxSize()) {
             AsyncImage(
@@ -161,7 +178,7 @@ fun FeedCard(title: String, description: String, imgLink: String,navigateToDetai
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.8f,
+                alpha = 0.6f,
                 modifier = Modifier.fillMaxSize()
             )
             Column(
@@ -188,7 +205,7 @@ fun FeedCard(title: String, description: String, imgLink: String,navigateToDetai
 
 @OptIn(ExperimentalSnapperApi::class)
 @Composable
-fun HomeTopFeed(data: List<ItemsData>, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeTopFeed(data: List<ItemsData>, navigateToDetail: (String) -> Unit, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val snapperFlingBehavior = rememberSnapperFlingBehavior(lazyListState = listState)
     LazyRow(
@@ -199,13 +216,13 @@ fun HomeTopFeed(data: List<ItemsData>, navigateToDetail: () -> Unit, modifier: M
         modifier = modifier.fillMaxWidth(),
     ) {
         items(data.size) { num ->
-            FeedCard(data[num].data[0].title.toString(), data[num].data[0].description.toString(), data[num].links?.get(0)?.href.toString(), navigateToDetail)
+            FeedCard(data[num].data[0].nasaId, data[num].data[0].title.toString(), data[num].data[0].description.toString(), data[num].links?.get(0)?.href.toString(), navigateToDetail)
         }
     }
 }
 
 @Composable
-fun ContentHeader(title: String, modifier: Modifier = Modifier) {
+fun ContentHeader(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth().padding(start = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -214,16 +231,16 @@ fun ContentHeader(title: String, modifier: Modifier = Modifier) {
         Text(
             title,
             fontFamily = poppins,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleSmall
         )
-        TextButton(onClick = {  }, colors = ButtonDefaults.buttonColors(
+        TextButton(onClick = { onClick() }, colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surface,
             disabledContentColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.primaryContainer,
             disabledContainerColor = MaterialTheme.colorScheme.surface
         )) {
             Text(
-                "See More",
+                "Shuffle",
                 fontFamily = poppins,
                 style = MaterialTheme.typography.titleSmall
             )
@@ -232,37 +249,37 @@ fun ContentHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HomeContent(data: List<ItemsData>, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeContent(data: List<ItemsData>, category1: List<ItemsData>, category2: List<ItemsData>, homeViewModel: HomeViewModel, navigateToDetail: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth().padding(15.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        ContentHeader("Latest")
+        ContentHeader("Latest", { homeViewModel.shuffleListData() })
         LazyRow {
             items(data.size) { num ->
-                ContentCards(data[num].links?.get(0)?.href.toString(), data[num].data[0].title.toString(), navigateToDetail)
+                ContentCards(data[num].data[0].nasaId, data[num].links?.get(0)?.href.toString(), data[num].data[0].title.toString(), navigateToDetail)
             }
         }
-        ContentHeader("Album 1")
+        ContentHeader(category1[0].data[0].keywords?.get(0) ?: "Null", { homeViewModel.shuffleCat1Data() })
         LazyVerticalGrid(
             columns = GridCells.Adaptive(160.dp),
-            modifier = Modifier.fillMaxWidth().height(550.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 550.dp).wrapContentHeight(),
             content = {
-                repeat(6) {
-                    item {
-                        ContentCards("", "", navigateToDetail)
+                items(category1.size) { num ->
+                    if (num <= 5) {
+                        ContentCards(category1[num].data[0].nasaId, category1[num].links?.get(0)?.href.toString(), category1[num].data[0].title.toString(), navigateToDetail)
                     }
                 }
             }
         )
-        ContentHeader("Album 2")
+        ContentHeader(category2[0].data[0].keywords?.get(0) ?: "Null", { homeViewModel.shuffleCat2Data() })
         LazyVerticalGrid(
             columns = GridCells.Adaptive(160.dp),
-            modifier = Modifier.fillMaxWidth().height(550.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 550.dp).wrapContentHeight(),
             content = {
-                repeat(6) {
-                    item {
-                        ContentCards("", "", navigateToDetail)
+                items(category2.size) { num ->
+                    if (num <= 5) {
+                        ContentCards(category2[num].data[0].nasaId, category2[num].links?.get(0)?.href.toString(), category2[num].data[0].title.toString(), navigateToDetail)
                     }
                 }
             }

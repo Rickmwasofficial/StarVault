@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -29,11 +31,14 @@ import com.example.starvault.R
 import com.example.starvault.ui.theme.poppins
 
 @Composable
-fun ContentCards(imgLink: String, title: String, navigateToDetail: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCards(id: String, imgLink: String, title: String, navigateToDetail: (String) -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.width(180.dp).height(180.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
             MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
-        onClick = { navigateToDetail() }
+        onClick = { navigateToDetail(id) },
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Black
+        )
     ) {
         Box(modifier.fillMaxSize()) {
             AsyncImage(
@@ -43,7 +48,7 @@ fun ContentCards(imgLink: String, title: String, navigateToDetail: () -> Unit, m
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.8f,
+                alpha = 0.6f,
                 fallback = painterResource(R.drawable.bg),
                 modifier = Modifier.fillMaxSize()
             )
@@ -55,8 +60,8 @@ fun ContentCards(imgLink: String, title: String, navigateToDetail: () -> Unit, m
                 Text(
                     text = title,
                     fontFamily = poppins,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
                 )
             }

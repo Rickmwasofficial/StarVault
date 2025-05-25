@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.starvault.ui.components.IconText
 import com.example.starvault.ui.screens.BookMarkScreen
 import com.example.starvault.ui.screens.DetailScreen
@@ -45,7 +46,7 @@ object Search
 @Serializable
 object Bookmark
 @Serializable
-object Detail
+data class Detail(val id: String)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,6 +86,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifier) {
+    val homeViewModel: HomeViewModel = viewModel()
     NavHost(
         navController = navHostController,
         startDestination = Home,
@@ -92,7 +94,8 @@ fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifi
     ) {
         composable<Home> {
             HomeScreen(
-                navigateToDetail = { navHostController.navigate(Detail) }
+                navigateToDetail = { id:String -> navHostController.navigate(Detail(id)) },
+                homeViewModel
             )
         }
         composable<Search> {
@@ -101,8 +104,9 @@ fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifi
         composable<Bookmark> {
             BookMarkScreen()
         }
-        composable<Detail> {
-            DetailScreen()
+        composable<Detail> { backStackEntry ->
+            val detail: Detail = backStackEntry.toRoute<Detail>()
+            DetailScreen(imgId = detail.id)
         }
     }
 

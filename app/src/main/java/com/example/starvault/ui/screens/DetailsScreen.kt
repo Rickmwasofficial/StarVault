@@ -1,5 +1,6 @@
 package com.example.starvault.ui.screens
 
+import ItemsData
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,48 +24,73 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.starvault.R
+import com.example.starvault.ui.components.ErrorScreen
 import com.example.starvault.ui.components.IconText
+import com.example.starvault.ui.components.LoadingScreen
 import com.example.starvault.ui.theme.orbitron
 import com.example.starvault.ui.theme.poppins
 
 
 @Composable
-fun DetailScreen(modifier: Modifier = Modifier) {
+fun DetailScreen(imgId: String,
+                 modifier: Modifier = Modifier,
+                 detailViewModel: DetailViewModel = viewModel()
+) {
+    val detailUIState = detailViewModel.detailUIState
+    LaunchedEffect(imgId) {
+        detailViewModel.getData(imgId)
+    }
+
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(30.dp)
-        ) {
-            item {
-                ImageView()
-                ImageSelector()
-                Description()
+        when(detailUIState) {
+            is DetailUIState.Success -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    item {
+                        ImageView(detailUIState.data)
+                    }
+                    item {
+                        ImageSelector(detailUIState.data)
+                    }
+                    item {
+                        Description(detailUIState.data)
+                    }
+                }
             }
+            is DetailUIState.Error -> ErrorScreen("Failed to Fetch Data")
+            is DetailUIState.Loading -> LoadingScreen("Fetching Data")
         }
     }
 }
 
 @Composable
-fun TopBar(modifier: Modifier = Modifier) {
+fun TopBar(text: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp),
+            .padding(vertical = 10.dp, horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Earth",
+            text = text,
             style = MaterialTheme.typography.headlineSmall,
             fontFamily = orbitron,
             textAlign = TextAlign.Center,
@@ -74,36 +100,46 @@ fun TopBar(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun DetailImages(modifier: Modifier = Modifier) {
+fun DetailImages(link: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.width(150.dp).height(150.dp).padding(bottom = 10.dp, start = 5.dp).border(1.dp,
+        modifier = modifier.width(150.dp).height(150.dp).padding(bottom = 10.dp, start = 10.dp).border(1.dp,
             MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
     ) {
         Box(modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.bg),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(link)
+                    .error(R.drawable.bg)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.8f
+                alpha = 0.6f,
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
 }
 
 @Composable
-fun ImageView(modifier: Modifier = Modifier) {
+fun ImageView(data: List<ItemsData>, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(350.dp)
     ) {
-        Image(
-            painter = painterResource(R.drawable.bg),
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(data[0].links?.get(0)?.href)
+                .error(R.drawable.bg)
+                .crossfade(true)
+                .build(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            alpha = 0.8f
+            alpha = 0.6f,
+            modifier = Modifier.fillMaxSize()
         )
-        TopBar(Modifier.align(Alignment.TopCenter))
+        TopBar(data[0].data[0].title.toString(), Modifier.align(Alignment.TopCenter))
         Box(Modifier
             .align(Alignment.BottomEnd)
             .padding(10.dp)
@@ -119,7 +155,7 @@ fun ImageView(modifier: Modifier = Modifier) {
                     modifier = Modifier.size(26.dp)
                 )
                 Text(
-                    text = stringResource(R.string.adc_center),
+                    text = data[0].data[0].center.toString(),
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.ExtraBold
@@ -130,24 +166,22 @@ fun ImageView(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageSelector(modifier: Modifier = Modifier) {
+fun ImageSelector(data: List<ItemsData>, modifier: Modifier = Modifier) {
     Text("Other Images", modifier = modifier.padding(15.dp), fontFamily = orbitron, style = MaterialTheme.typography.titleMedium)
     LazyRow(
         modifier = modifier.padding(vertical = 1.dp)
     ) {
-        repeat(6) {
-            item {
-                DetailImages()
-            }
+        items(data[0].links!!.size) { num ->
+            DetailImages(data[0].links!![num].href )
         }
     }
 }
 
 @Composable
-fun Description(modifier: Modifier = Modifier) {
+fun Description(data: List<ItemsData>, modifier: Modifier = Modifier) {
     Text("Description", modifier = modifier.padding(15.dp), fontFamily = orbitron, style = MaterialTheme.typography.titleMedium)
     Text(
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        data[0].data[0].description.toString(),
         modifier = modifier.padding(horizontal = 15.dp, vertical = 2.dp),
         fontFamily = poppins,
         style = MaterialTheme.typography.bodyMedium
