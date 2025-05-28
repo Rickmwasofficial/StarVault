@@ -1,12 +1,10 @@
 package com.example.starvault.ui.screens
 
 import ItemsData
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +36,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.starvault.R
 import com.example.starvault.ui.components.ErrorScreen
-import com.example.starvault.ui.components.IconText
 import com.example.starvault.ui.components.LoadingScreen
 import com.example.starvault.ui.theme.orbitron
 import com.example.starvault.ui.theme.poppins
@@ -47,8 +43,8 @@ import com.example.starvault.ui.theme.poppins
 
 @Composable
 fun DetailScreen(imgId: String,
-                 modifier: Modifier = Modifier,
-                 detailViewModel: DetailViewModel = viewModel()
+                 detailViewModel: DetailViewModel,
+                 modifier: Modifier = Modifier
 ) {
     val detailUIState = detailViewModel.detailUIState
     LaunchedEffect(imgId) {
@@ -65,10 +61,10 @@ fun DetailScreen(imgId: String,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     item {
-                        ImageView(detailUIState.data)
+                        ImageView(detailUIState.data, detailUIState.currentImg)
                     }
                     item {
-                        ImageSelector(detailUIState.data)
+                        ImageSelector(detailUIState.data, detailUIState.currentImg, detailViewModel)
                     }
                     item {
                         Description(detailUIState.data)
@@ -100,10 +96,16 @@ fun TopBar(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun DetailImages(link: String, modifier: Modifier = Modifier) {
+fun DetailImages(link: String, onClick: () -> Unit, selected: Boolean, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.width(150.dp).height(150.dp).padding(bottom = 10.dp, start = 10.dp).border(1.dp,
-            MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
+        modifier = if (selected) {
+            modifier.width(150.dp).height(150.dp).padding(bottom = 10.dp, start = 10.dp).border(2.dp,
+                MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp))
+        } else {
+            modifier.width(150.dp).height(150.dp).padding(bottom = 10.dp, start = 10.dp).border(1.dp,
+                MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
+        },
+        onClick = { onClick() }
     ) {
         Box(modifier.fillMaxSize()) {
             AsyncImage(
@@ -122,7 +124,7 @@ fun DetailImages(link: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageView(data: List<ItemsData>, modifier: Modifier = Modifier) {
+fun ImageView(data: List<ItemsData>, img: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -130,7 +132,7 @@ fun ImageView(data: List<ItemsData>, modifier: Modifier = Modifier) {
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(data[0].links?.get(0)?.href)
+                .data(img)
                 .error(R.drawable.bg)
                 .crossfade(true)
                 .build(),
@@ -166,13 +168,17 @@ fun ImageView(data: List<ItemsData>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageSelector(data: List<ItemsData>, modifier: Modifier = Modifier) {
+fun ImageSelector(data: List<ItemsData>, img: String, viewModel: DetailViewModel, modifier: Modifier = Modifier) {
     Text("Other Images", modifier = modifier.padding(15.dp), fontFamily = orbitron, style = MaterialTheme.typography.titleMedium)
     LazyRow(
         modifier = modifier.padding(vertical = 1.dp)
     ) {
         items(data[0].links!!.size) { num ->
-            DetailImages(data[0].links!![num].href )
+            if (data[0].links!![num].href == img) {
+                DetailImages(data[0].links!![num].href, { viewModel.setCurrentImage(data[0].links!![num].href) }, true)
+            } else {
+                DetailImages(data[0].links!![num].href, { viewModel.setCurrentImage(data[0].links!![num].href) }, false)
+            }
         }
     }
 }

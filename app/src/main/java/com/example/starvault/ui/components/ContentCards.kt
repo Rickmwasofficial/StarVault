@@ -45,6 +45,7 @@ fun ContentCards(id: String, imgLink: String, title: String, navigateToDetail: (
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imgLink)
                     .crossfade(true)
+                    .placeholder(R.drawable.starvault)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,

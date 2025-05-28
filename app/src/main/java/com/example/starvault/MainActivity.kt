@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+// HiltViewModel is not available. Please ensure that the Hilt dependencies are correctly configured in your project.
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -32,12 +35,15 @@ import androidx.navigation.toRoute
 import com.example.starvault.ui.components.IconText
 import com.example.starvault.ui.screens.BookMarkScreen
 import com.example.starvault.ui.screens.DetailScreen
+import com.example.starvault.ui.screens.DetailViewModel
 import com.example.starvault.ui.screens.HomeScreen
 import com.example.starvault.ui.screens.HomeUIState
 import com.example.starvault.ui.screens.HomeViewModel
 import com.example.starvault.ui.screens.SearchScreen
 import com.example.starvault.ui.theme.StarVaultTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
+import kotlin.getValue
 
 @Serializable
 object Home
@@ -48,6 +54,7 @@ object Bookmark
 @Serializable
 data class Detail(val id: String)
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,13 +93,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifier) {
-    val homeViewModel: HomeViewModel = viewModel()
     NavHost(
         navController = navHostController,
         startDestination = Home,
         modifier = modifier
     ) {
         composable<Home> {
+            val homeViewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
                 navigateToDetail = { id:String -> navHostController.navigate(Detail(id)) },
                 homeViewModel
@@ -106,10 +113,10 @@ fun AppNavHost(navHostController: NavHostController, modifier: Modifier = Modifi
         }
         composable<Detail> { backStackEntry ->
             val detail: Detail = backStackEntry.toRoute<Detail>()
-            DetailScreen(imgId = detail.id)
+            val detailViewModel: DetailViewModel = hiltViewModel()
+            DetailScreen(imgId = detail.id, detailViewModel = detailViewModel)
         }
     }
-
 }
 
 @Preview(showBackground = true)

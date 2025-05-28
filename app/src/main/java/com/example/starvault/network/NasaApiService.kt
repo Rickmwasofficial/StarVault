@@ -8,13 +8,6 @@ import kotlinx.serialization.json.Json
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-private const val BASE_URL = "https://images-api.nasa.gov/"
-
-private val retrofit = Retrofit.Builder()
-    .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
-    .baseUrl(BASE_URL)
-    .build()
-
 val nasaSearchCategories = listOf(
     // 🚀 Space Missions
     "Apollo 11",
@@ -120,10 +113,4 @@ interface NasaApiService {
         @Query("media_type") mediaType: String = "image",
         @Query("nasa_id") id: String
     ): NasaData
-}
-
-object NasaApi {
-    val retrofitService: NasaApiService by lazy {
-        retrofit.create(NasaApiService::class.java)
-    }
 }

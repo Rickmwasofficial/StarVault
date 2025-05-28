@@ -6,10 +6,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.starvault.network.NasaRepositoryImpl
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import okio.IOException
+import javax.inject.Inject
 
-class HomeViewModel(): ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val repository: NasaRepositoryImpl
+): ViewModel() {
     var homeUIState: HomeUIState by mutableStateOf(HomeUIState.Loading)
         private set
 
@@ -26,7 +31,6 @@ class HomeViewModel(): ViewModel() {
                 }
             }
             homeUIState = try {
-                val repository = NasaRepositoryImpl()
                 val listResult = repository.getData()
                 val feedResult = repository.getFeed()
                 val category1 = repository.getCategory()

@@ -175,6 +175,7 @@ fun FeedCard(id: String, title: String, description: String, imgLink: String, na
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imgLink)
                     .crossfade(true)
+                    .placeholder(R.drawable.starvault)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
