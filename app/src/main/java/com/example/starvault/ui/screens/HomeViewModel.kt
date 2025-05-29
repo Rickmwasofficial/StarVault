@@ -21,7 +21,6 @@ class HomeViewModel @Inject constructor(
     init {
         getData(false)
     }
-
     private fun getData(isRefreshing: Boolean) {
         viewModelScope.launch {
             if (isRefreshing) {
@@ -44,11 +43,9 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
     fun refresh() {
         getData(true)
     }
-
     fun shuffleListData() {
         val currentState = homeUIState
         if (currentState is HomeUIState.Success) {
